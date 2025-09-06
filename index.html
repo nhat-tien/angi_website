@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Chapter 1 - Angi Docs</title>
+        <title>Bytecode - Angi Docs</title>
 
 
         <!-- Custom HTML head -->
@@ -166,7 +166,32 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="chapter-1"><a class="header" href="#chapter-1">Chapter 1</a></h1>
+                        <h1 id="bytecode"><a class="header" href="#bytecode">Bytecode</a></h1>
+<h2 id="the-format"><a class="header" href="#the-format">The format</a></h2>
+<h2 id="the-opcode"><a class="header" href="#the-opcode">The opcode</a></h2>
+<ul>
+<li><code>LOAD_CONST  dr, const_offset</code></li>
+<li><code>NEW_OBJECT  dr</code></li>
+<li><code>SET_ATTR    dr, rKey, rValue</code></li>
+</ul>
+<pre><code class="language-txt">port = 3030;
+response.message = "Hello";
+
+ 1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32
+|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
+|              |           |           |           |
+     opcode       Des Reg         ...
+</code></pre>
+<h2 id="section"><a class="header" href="#section">Section</a></h2>
+<h3 id="in-head"><a class="header" href="#in-head">In head</a></h3>
+<ul>
+<li>Magic number(u32): 0x414E4749 = "ANGI"</li>
+<li>version(u16): 0x0001 = "0.0.1"</li>
+<li>const_offset(u32)</li>
+<li>const_size(u32)</li>
+<li>code_offset(u32)</li>
+<li>code_size(u32)</li>
+</ul>
 
                     </main>
 
