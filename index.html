@@ -167,31 +167,128 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="bytecode"><a class="header" href="#bytecode">Bytecode</a></h1>
+<p>VM load the bytecode
+-&gt; build tree in vm (Tree with value const, if value is lamda, it will eval the bytecode with offset)
+-&gt;</p>
 <h2 id="the-format"><a class="header" href="#the-format">The format</a></h2>
 <h2 id="the-opcode"><a class="header" href="#the-opcode">The opcode</a></h2>
 <ul>
-<li><code>LOAD_CONST  dr, const_offset</code></li>
-<li><code>NEW_OBJECT  dr</code></li>
-<li><code>SET_ATTR    dr, rKey, rValue</code></li>
+<li><code>LDC dr, const_offset</code></li>
+<li><code>LIM dr, number</code></li>
+<li><code>MTB dr</code></li>
+<li><code>SAT dr, rKey, rValue</code></li>
+<li><code>RET dr</code></li>
+<li><code>MTH dr</code></li>
 </ul>
+<h3 id="ldc---load-const"><a class="header" href="#ldc---load-const">LDC - Load const</a></h3>
+<pre><code class="language-txt"> 1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32
+|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
+|    8bit               |   4bit    |                          20bit                            |
+</code></pre>
+<h3 id="mtb---make-table"><a class="header" href="#mtb---make-table">MTB - Make Table</a></h3>
+<pre><code class="language-txt"> 1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32
+|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
+|    8bit               |                                                           |           |
+|    opcode             |                                                           |    Reg    |
+</code></pre>
+<h3 id="sat---set-attribute"><a class="header" href="#sat---set-attribute">SAT - Set Attribute</a></h3>
+<pre><code class="language-txt"> 1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32
+|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
+|    8bit               |                                   |    4bit   |           |           |
+|    opcode             |                                   |  Des Reg  |  Key Reg  | Value Reg |
+</code></pre>
+<h3 id="mtk----make-thunk"><a class="header" href="#mtk----make-thunk">MTK  - Make Thunk</a></h3>
+<pre><code class="language-txt"> 1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32
+|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
+|    8bit               |   4bit    |                          20bit                            |
+</code></pre>
+<h3 id="ret---return"><a class="header" href="#ret---return">RET - Return</a></h3>
+<pre><code class="language-txt"> 1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32
+|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
+|    8bit               |                                                           |           |
+|    opcode             |                                                           |    Reg    |
+</code></pre>
 <pre><code class="language-txt">port = 3030;
 response.message = "Hello";
 
  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32
 |--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
-|              |           |           |           |
+|              |           |           |        |
      opcode       Des Reg         ...
 </code></pre>
 <h2 id="section"><a class="header" href="#section">Section</a></h2>
 <h3 id="in-head"><a class="header" href="#in-head">In head</a></h3>
 <ul>
 <li>Magic number(u32): 0x414E4749 = "ANGI"</li>
-<li>version(u16): 0x0001 = "0.0.1"</li>
+<li>version(u32): 0x0001 = "0.0.1"</li>
 <li>const_offset(u32)</li>
 <li>const_size(u32)</li>
 <li>code_offset(u32)</li>
 <li>code_size(u32)</li>
 </ul>
+<h2 id="example"><a class="header" href="#example">Example</a></h2>
+<p>Save</p>
+<pre><code class="language-txt">{
+   port = 3030;
+   response = {
+      message = "Hello";
+   };
+}
+</code></pre>
+<p>To memory</p>
+<pre><code class="language-txt">[Const]
+1: "port"
+2: "response"
+3: "message"
+4: "Hello"
+5: 3030
+...
+[Code]
+MTB r0
+LDC r1, c1
+LDC r2, c5
+SAT r0, r1, r2 // port = 3030
+LDC r1, c2
+MTK r2, 1
+SAT r0, r1, r2 // response = &lt;thunk 1&gt;
+RET r0
+
+:thunk 1
+MTB r0
+LDC r3, c3
+LDC r4, c4
+SAT r0, r3, r4 // message = "Hello"
+RET r0
+</code></pre>
+<pre><code class="language-txt">{
+   port = 3030;
+   handler = () {
+      let b = 1 + 1;
+      return b;
+   }
+}
+</code></pre>
+<pre><code class="language-txt">[Const]
+1: "port"
+2: "path"
+3: "handler"
+5: 3030
+...
+[Code]
+MTB r0
+LDC r1, c1
+LDC r2, c5
+SAT r0, r1, r2
+
+MTB r2
+LDC r3, c3
+LDC r4, c4
+SAT r2, r3, r4
+
+LDC r1, c2
+SAT r0, r1, r2
+RET r0
+</code></pre>
 
                     </main>
 
